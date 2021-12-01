@@ -350,7 +350,7 @@ class MailParser(object):
 
         # walk all mail parts
         for i, p in enumerate(parts):
-            if not p.is_multipart():
+            if not p.is_multipart() or p.get('content-disposition') == 'attachment':
                 charset = p.get_content_charset('utf-8')
                 charset_raw = p.get_content_charset()
                 log.debug("Charset {!r} part {!r}".format(charset, i))
@@ -376,7 +376,10 @@ class MailParser(object):
                     elif content_subtype in ('rtf'):
                         is_attachment = True
                         filename = "{}.rtf".format(random_string())
-
+                    elif content_disposition == 'attachment':
+                        is_attachment = True
+                        payload = p.get_payload()
+                        filename = dict(payload[0]._headers).get('Subject')
                 # this is an attachment
                 if is_attachment:
                     log.debug("Email part {!r} is an attachment".format(i))
